@@ -425,7 +425,7 @@ components:
     ApiTextTCKNValue:
       type: string
       minLength: 1
-      maxLength: 256
+      maxLength: 11
     ApiTextValue:
       type: string
       minLength: 1
@@ -494,9 +494,13 @@ components:
         password:
           $ref: '#/components/schemas/ApiTextValue'
         name:
-          $ref: '#/components/schemas/ApiTextValue'
+          type: string
+          minLength: 1
+          maxLength: 30
         surname:
-          $ref: '#/components/schemas/ApiTextValue'
+          type: string
+          minLength: 1
+          maxLength: 30
         tckn:
           $ref: '#/components/schemas/ApiTextTCKNValue'
     LoginResponse:
