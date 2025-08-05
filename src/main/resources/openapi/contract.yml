@@ -1,0 +1,701 @@
+openapi: 3.0.2
+info:
+  title: INGHubs Rest API
+  description: |
+    INGHubs - Software Engineer Assignment
+  license:
+    name: Apache 2.0
+  version: '1'
+security:
+  - Bearer-Authentication: []
+servers:
+  - url: http://localhost:8081
+    description: Generated server url
+paths:
+  /api/employee/transaction/approve:
+    post:
+      tags:
+        - employee-controller
+      summary: |
+        Approve transaction
+      description: |
+        Approve transaction
+      operationId: doApproveTransaction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveTransactionApiRequest"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: boolean
+
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/employee/transactions:
+    get:
+      tags:
+        - employee-controller
+      summary: |
+        List all transactions
+      description: |
+        List all transactions
+      operationId: doGetAllTransaction
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          required: false
+          description: Page
+        - in: query
+          name: size
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 10
+          required: false
+          description: Size
+        - in: query
+          name: transaction_status
+          schema:
+            $ref: '#/components/schemas/ApiTransactionStatus'
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeTransactionsApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/customer/wallet/{wallet_id}/transactions:
+    get:
+      tags:
+        - wallet-controller
+      summary: | 
+        List transactions for a given wallet
+      description: |
+        List transactions for a given wallet
+      operationId: doGetTransactions
+      parameters:
+        - in: path
+          name: wallet_id
+          schema:
+            $ref: '#/components/schemas/ApiTextValue'
+          required: true
+          description: WalletId
+        - in: query
+          name: page
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          required: false
+          description: Page
+        - in: query
+          name: size
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 10
+          required: false
+          description: Size
+        - in: query
+          name: transaction_status
+          schema:
+            $ref: '#/components/schemas/ApiTransactionStatus'
+          required: false
+          description: Transaction Status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletTransactionsApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/customer/wallet/withdraw:
+    post:
+      tags:
+        - wallet-controller
+      summary: |
+        Create a new withdraw transaction for the given wallet ID
+      description: |
+        Create a new withdraw transaction for the given wallet ID
+      operationId: doCreateWithdrawTransaction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawApiRequest"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/customer/wallet/deposit:
+    post:
+      tags:
+        - wallet-controller
+      summary: |
+        Create a new deposit transaction for the given wallet ID
+      description: |
+        Create a new deposit transaction for the given wallet ID
+      operationId: doCreateDepositTransaction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositApiRequest"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/customer/wallets:
+    get:
+      tags:
+        - wallet-controller
+      summary: |
+        Get list of wallets for logged-in customer
+      operationId: doGetWallets
+      parameters:
+        - in: query
+          name: currency
+          schema:
+            $ref: '#/components/schemas/ApiCurrencyCode'
+          required: false
+        - in: query
+          name: balanceAmountEqualOrHigherThan
+          schema:
+            type: number
+            format: currency
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletApiResponses'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+    post:
+      tags:
+        - wallet-controller
+      summary: |
+        Create a new wallet for the logged-in customer
+      description: |
+        Create a new wallet for the logged-in customer
+      operationId: doCreateWallet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletCreateApiRequest"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/auth/login:
+    post:
+      tags:
+        - login-controller
+      summary: |
+        Trying to login with email and password
+      description: |
+        Client will send email and password to our backend to login traditional way
+      operationId: doLogin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/auth/employee/create:
+    post:
+      tags:
+        - employee-controller
+      summary: |
+        Trying to create employee with email and password
+      description: |
+        Client will send email and password to our backend to register traditional way
+      operationId: doRegisterEmployeeWithEmailPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterWithEmailPasswordRequest"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+  /api/auth/customer/create:
+    post:
+      tags:
+        - customer-controller
+      summary: |
+        Trying to create customer with email and password
+      description: |
+        Client will send email and password to our backend to register traditional way
+      operationId: doRegisterWithEmailPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterWithEmailPasswordRequest"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+components:
+  securitySchemes:
+    Bearer-Authentication:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ProblemDetail:
+      type: object
+      properties:
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        properties:
+          type: object
+          additionalProperties:
+            type: object
+    BasePageableResponse:
+      type: object
+      required:
+        - totalElements
+        - totalPages
+        - page
+        - size
+        - sort
+        - number
+      properties:
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        sort:
+          type: array
+          items:
+            type: string
+        number:
+          type: integer
+          format: int32
+    BaseApiResponse:
+      type: object
+      required:
+        - isSuccess
+        - httpStatusCode
+      properties:
+        isSuccess:
+          type: boolean
+        errorResponses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemDetail'
+        httpStatusCode:
+          type: integer
+          format: int32
+    ApiErrorResponse:
+      type: object
+      required:
+        - isSuccess
+        - httpStatusCode
+      properties:
+        response:
+          type: object
+        isSuccess:
+          type: boolean
+        errorResponses:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemDetail'
+        httpStatusCode:
+          type: integer
+          format: int32
+    ApiTextTCKNValue:
+      type: string
+      minLength: 1
+      maxLength: 256
+    ApiTextValue:
+      type: string
+      minLength: 1
+      maxLength: 256
+    ApiEmailTextValue:
+      type: string
+      format: email
+      minLength: 1
+      maxLength: 256
+    ApiCurrencyCode:
+      type: string
+      enum:
+        - TRY
+        - USD
+        - EURO
+    ApiTransactionStatus:
+      type: string
+      enum:
+        - UNKNOWN
+        - PROCESSING
+        - PENDING
+        - APPROVED
+        - APPROVED_FROM_PENDING
+        - FAIL
+    ApiPartyType:
+      type: string
+      enum:
+        - IBAN
+        - PAYMENT
+    ApiMoney:
+      type: object
+      required:
+        - money
+        - currencyType
+      properties:
+        money:
+          type: number
+          format: currency
+        currencyType:
+          $ref: '#/components/schemas/ApiCurrencyCode'
+    RegisterResponse:
+      type: object
+      properties:
+        email:
+          type: string
+    RegisterApiResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              $ref: '#/components/schemas/RegisterResponse'
+    RegisterWithEmailPasswordRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+        - surname
+        - tckn
+      properties:
+        email:
+          $ref: '#/components/schemas/ApiEmailTextValue'
+        password:
+          $ref: '#/components/schemas/ApiTextValue'
+        name:
+          $ref: '#/components/schemas/ApiTextValue'
+        surname:
+          $ref: '#/components/schemas/ApiTextValue'
+        tckn:
+          $ref: '#/components/schemas/ApiTextTCKNValue'
+    LoginResponse:
+      type: object
+      properties:
+        email:
+          type: string
+        token:
+          type: string
+    LoginApiResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              $ref: '#/components/schemas/LoginResponse'
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          $ref: '#/components/schemas/ApiEmailTextValue'
+        password:
+          $ref: '#/components/schemas/ApiTextValue'
+    WalletCreateApiRequest:
+      type: object
+      required:
+        - walletName
+        - activeForShopping
+        - activeForWithdraw
+        - currencyType
+      properties:
+        walletName:
+          $ref: '#/components/schemas/ApiTextValue'
+        activeForShopping:
+          type: boolean
+        activeForWithdraw:
+          type: boolean
+        currencyType:
+          $ref: '#/components/schemas/ApiCurrencyCode'
+    WalletResponse:
+      type: object
+      required:
+        - id
+        - walletName
+        - balance
+        - usableBalance
+        - activeForShopping
+        - activeForWithdraw
+      properties:
+        id:
+          type: string
+        walletName:
+          type: string
+        balance:
+          $ref: '#/components/schemas/ApiMoney'
+        usableBalance:
+          $ref: '#/components/schemas/ApiMoney'
+        activeForShopping:
+          type: boolean
+        activeForWithdraw:
+          type: boolean
+    WalletApiResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              $ref: '#/components/schemas/WalletResponse'
+    WalletApiResponses:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              type: array
+              items:
+                $ref: '#/components/schemas/WalletResponse'
+    WithdrawApiRequest:
+      type: object
+      required:
+        - walletId
+        - money
+        - sourceOfDeposit
+        - oppositeParty;
+      properties:
+        walletId:
+          $ref: '#/components/schemas/ApiTextValue'
+        money:
+          $ref: '#/components/schemas/ApiMoney'
+        sourceOfDeposit:
+          $ref: '#/components/schemas/ApiPartyType'
+        oppositeParty:
+          $ref: '#/components/schemas/ApiTextValue'
+    DepositApiRequest:
+      type: object
+      required:
+        - walletId
+        - money
+        - sourceOfDeposit
+        - oppositeParty;
+      properties:
+        walletId:
+          $ref: '#/components/schemas/ApiTextValue'
+        money:
+          $ref: '#/components/schemas/ApiMoney'
+        sourceOfDeposit:
+          $ref: '#/components/schemas/ApiPartyType'
+        oppositeParty:
+          $ref: '#/components/schemas/ApiTextValue'
+    TransactionResponse:
+      type: object
+      required:
+        - walletId
+        - transactionId
+        - transactionStatus
+        - amount
+        - transactionType
+        - code
+        - message
+      properties:
+        walletId:
+          type: string
+        transactionId:
+          type: string
+        transactionStatus:
+          $ref: '#/components/schemas/ApiTransactionStatus'
+        amount:
+          $ref: '#/components/schemas/ApiMoney'
+        transactionType:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+    TransactionApiResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              $ref: '#/components/schemas/TransactionResponse'
+    WalletTransactionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BasePageableResponse'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TransactionResponse'
+    WalletTransactionsApiResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              $ref: '#/components/schemas/WalletTransactionsResponse'
+    EmployeeTransactionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BasePageableResponse'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TransactionResponse'
+    EmployeeTransactionsApiResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          required:
+            - response
+          properties:
+            response:
+              $ref: '#/components/schemas/EmployeeTransactionsResponse'
+    ApproveTransactionApiRequest:
+      type: object
+      required:
+        - walletId
+        - transactionId
+      properties:
+        walletId:
+          $ref: '#/components/schemas/ApiTextValue'
+        transactionId:
+          $ref: '#/components/schemas/ApiTextValue'
