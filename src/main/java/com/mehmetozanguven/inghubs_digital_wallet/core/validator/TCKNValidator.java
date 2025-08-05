@@ -17,19 +17,18 @@ public class TCKNValidator implements ConstraintValidator<TCKNConstraint, String
         }
 
         int oddSum=0,evenSum=0,controlDigit=0;
-        for(int i=0;i<=8;i++){
-            if(i%2==0){
-                oddSum+=Character.getNumericValue(tcknValue.charAt(i));
-
-            }else{
-                evenSum+=Character.getNumericValue(tcknValue.charAt(i));
+        for(int index = 0; index <= 8; index++){
+            if(index % 2==0){
+                oddSum+=Character.getNumericValue(tcknValue.charAt(index));
+            } else{
+                evenSum+=Character.getNumericValue(tcknValue.charAt(index));
             }
         }
         controlDigit = (oddSum*7-evenSum)%10;
-        if(Character.getNumericValue(tcknValue.charAt(9))!=controlDigit){
+        if(Character.getNumericValue(tcknValue.charAt(9))!=controlDigit) {
             return false;
         }
-        if(Character.getNumericValue(tcknValue.charAt(10))!=(controlDigit+evenSum+oddSum)%10){
+        if(Character.getNumericValue(tcknValue.charAt(10))!=(controlDigit+evenSum+oddSum)%10) {
             return false;
         }
         return true;
