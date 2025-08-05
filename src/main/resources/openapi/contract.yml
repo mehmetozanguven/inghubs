@@ -368,8 +368,6 @@ components:
         - totalPages
         - page
         - size
-        - sort
-        - number
       properties:
         totalElements:
           type: integer
@@ -383,10 +381,6 @@ components:
         size:
           type: integer
           format: int32
-        sort:
-          type: array
-          items:
-            type: string
         number:
           type: integer
           format: int32
@@ -631,6 +625,8 @@ components:
         - message
         - expirationTime
         - isExpired
+        - oppositePartyName
+        - oppositeParty
       properties:
         walletId:
           type: string
@@ -651,6 +647,10 @@ components:
           format: int64
         isExpired:
           type: boolean
+        oppositePartyName:
+          type: string
+        oppositeParty:
+          type: string
     TransactionApiResponse:
       allOf:
         - $ref: '#/components/schemas/BaseApiResponse'

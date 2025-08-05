@@ -32,6 +32,12 @@ public enum ApiErrorInfo implements ApiExceptionInfo {
     ),
     TRANSACTION_OPERATION_FAILED("T-1", "Transaction operation failed", HttpStatus.OK),
     TRANSACTION_NOT_FOUND("T-2", "Transaction operation failed", HttpStatus.OK),
+    TRANSACTION_EXPIRED("T-3", "Transaction expired", HttpStatus.BAD_REQUEST),
+    TRANSACTION_WITHDRAW_NOT_ENOUGH_MONEY("T-4", "Wallet has not enough balance and usableBalance money", HttpStatus.BAD_REQUEST),
+    TRANSACTION_WITHDRAW_NOT_ENOUGH_BALANCE_MONEY("T-5", "Wallet has not enough balance money", HttpStatus.BAD_REQUEST),
+    TRANSACTION_WITHDRAW_NOT_ENOUGH_USABLE_MONEY("T-4", "Wallet has not usableBalance money", HttpStatus.BAD_REQUEST),
+
+    APPROVABLE_TRANSACTION_NOT_FOUND("T-6", "There is no transaction to approve", HttpStatus.BAD_REQUEST),
     AUTHENTICATION_EXCEPTION(
             "AUTH-1",
             "Authentication exception",
@@ -57,8 +63,8 @@ public enum ApiErrorInfo implements ApiExceptionInfo {
             "W-2",
             "Wallet not open for withdraw",
             HttpStatus.OK
-    ),
-    TRANSACTION_EXPIRED("T-3", "Transaction expired", HttpStatus.BAD_REQUEST);
+    )
+    ;
 
     public final String code;
     public final String message;

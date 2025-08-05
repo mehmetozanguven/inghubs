@@ -20,6 +20,7 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -54,7 +55,7 @@ public class WalletExternalEmployeeService {
                 Optional<Transaction> inDB = transactionRepository.findByPessimisticLockForApprove(walletId, transactionId, TransactionStatus.PENDING);
                 if (inDB.isEmpty()) {
                     return OperationResult.<Boolean>builder()
-                            .addException(ApiErrorInfo.TRANSACTION_NOT_FOUND)
+                            .addException(ApiErrorInfo.APPROVABLE_TRANSACTION_NOT_FOUND)
                             .build();
                 }
                 Transaction transaction = inDB.get();
@@ -97,7 +98,7 @@ public class WalletExternalEmployeeService {
         Optional<TransactionStatus> transactionStatus = Optional.ofNullable(apiTransactionStatus)
                 .map(ApiTransactionStatus::getValue)
                 .map(TransactionStatus::findByClientValue);
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createTimestampMilli"));
 
         Page<Transaction> walletsInPage = transactionRepository.findAll((Specification<Transaction>) (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();

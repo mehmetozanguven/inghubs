@@ -98,7 +98,9 @@ public interface WalletMapper {
             @Mapping(target = "code", source = "transactionModel.transactionInfoModel.code"),
             @Mapping(target = "message", source = "transactionModel.transactionInfoModel.message"),
             @Mapping(target = "expirationTime", source = "transactionModel.expirationTime", qualifiedBy = OffsetDateTimeToEpochMillis.class),
-            @Mapping(target = "isExpired", source = "transactionModel.transactionExpired")
+            @Mapping(target = "isExpired", source = "transactionModel.transactionExpired"),
+            @Mapping(target = "oppositeParty", source = "transactionModel.oppositeParty"),
+            @Mapping(target = "oppositePartyName", source = "transactionModel.oppositePartyType.value")
     })
     TransactionResponse createTransactionResponseFromTransactionModel(TransactionModel transactionModel);
 

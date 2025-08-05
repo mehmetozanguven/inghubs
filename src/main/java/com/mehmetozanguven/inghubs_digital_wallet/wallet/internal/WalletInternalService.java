@@ -19,6 +19,7 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -94,7 +95,7 @@ public class WalletInternalService {
         Optional<TransactionStatus> transactionStatus = Optional.ofNullable(apiTransactionStatus)
                 .map(ApiTransactionStatus::getValue)
                 .map(TransactionStatus::findByClientValue);
-
+        pageRequest = pageRequest.withSort(Sort.by(Sort.Direction.DESC, "lastModifiedUTCTime"));
         Page<Transaction> walletsInPage = transactionRepository.findAll((Specification<Transaction>) (root, query, criteriaBuilder) -> {
             Join<Transaction, Wallet> walletJoin = root.join(Transaction_.wallet);
 
