@@ -22,7 +22,8 @@
   - Project will load the environment variables from a file (for docker-compose solution) called **.env**
 - Run the following command:
   - `./mvnw clean package -DskipTests && docker build -t my-springboot-app . && docker compose up`
-- For the first run it will create a folder called postgres_data in the project folder and run the **init-db.sh** script
+  - For the first run it will create a folder called **postgres_data** in the project folder and run the **init-db.sh** script. 
+    - Therefore, for the first run spring boot project may fail. Please run the command again
 - Then open the swagger documentation: 
   - [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
@@ -63,21 +64,21 @@ app:
 
 - Meke sure that project is running and accessible through swagger address
 - Create customer & employee
-  - `/api/auth/customer/create`
-  - `/api/auth/employee/create`
+  - POST `/api/auth/customer/create`
+  - POST `/api/auth/employee/create`
 - Then login with customer email & password :
-  - `/api/auth/login`
+  - POST `/api/auth/login`
 - Create a wallet for customer
-  - `/api/customer/wallets`
+  - POST `/api/customer/wallets`
 - Then create a transaction (either deposit or withdraw)
-  - `/api/customer/wallet/deposit` || `/api/customer/wallet/withdraw`
+  - POST `/api/customer/wallet/deposit` || `/api/customer/wallet/withdraw`
 - Check customer transactions
-  - `/api/customer/wallet/{walletid}/transactions`
+  - GET `/api/customer/wallet/{walletid}/transactions`
 - If any transactions require approve, login with employee email & password:
 - Filter transactions
-  - `/api/employee/transactions`
+  - GET `/api/employee/transactions`
 - Approve transaction
-  - `/api/employee/transaction/post`
+  - POST `/api/employee/transaction/post`
 
 ## Project Overview
 

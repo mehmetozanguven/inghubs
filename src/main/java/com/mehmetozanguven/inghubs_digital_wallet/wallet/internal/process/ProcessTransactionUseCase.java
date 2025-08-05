@@ -2,6 +2,7 @@ package com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.process;
 
 import com.mehmetozanguven.inghubs_digital_wallet.core.ApiApplyOperationResultLogic;
 import com.mehmetozanguven.inghubs_digital_wallet.core.BusinessUseCase;
+import com.mehmetozanguven.inghubs_digital_wallet.core.DateOperation;
 import com.mehmetozanguven.inghubs_digital_wallet.core.OperationResult;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.transaction.TransactionEvent;
 import com.mehmetozanguven.inghubs_digital_wallet.core.exception.ApiErrorInfo;
@@ -29,7 +30,7 @@ public class ProcessTransactionUseCase implements ApiApplyOperationResultLogic<T
 
     @Override
     public OperationResult<ProcessTransactionInternalRequest> logicBefore(TransactionEvent transactionEvent) {
-        Optional<Transaction> inDB = transactionRepository.findByPessimisticLockBeforeExpiration(transactionEvent.transactionId());
+        Optional<Transaction> inDB = transactionRepository.findByPessimisticLockBeforeExpiration(transactionEvent.transactionId(), DateOperation.getOffsetNowAsUTC());
         if (inDB.isEmpty()) {
             log.error("There is no transaction for the given ID: {}", transactionEvent.transactionId());
             return OperationResult.<ProcessTransactionInternalRequest>builder()

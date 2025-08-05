@@ -1,5 +1,6 @@
 package com.mehmetozanguven.inghubs_digital_wallet.wallet;
 
+import com.mehmetozanguven.inghubs_digital_wallet.core.DateOperation;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.transaction.TransactionEvent;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.transaction.TransactionStatus;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.TransactionKafkaService;
@@ -11,6 +12,7 @@ import com.mehmetozanguven.inghubs_digital_wallet_api.contract.openapi.model.Api
 import com.mehmetozanguven.inghubs_digital_wallet_api.contract.openapi.model.EmployeeTransactionsResponse;
 import com.mehmetozanguven.inghubs_digital_wallet_api.contract.openapi.model.TransactionResponse;
 import jakarta.persistence.criteria.Predicate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @PreAuthorize("hasRole('ROLE_EMPLOYEE')")
 public class WalletExternalEmployeeService {
@@ -41,15 +44,21 @@ public class WalletExternalEmployeeService {
     }
 
     public boolean approveTransaction(String walletId, String transactionId) {
-        transactionTemplate.executeWithoutResult(status -> {
-            Optional<Transaction> inDB = transactionRepository.findByPessimisticLockBeforeExpiration(transactionId);
-            Transaction transaction = inDB.orElseThrow();
-            transaction.setTransactionStatus(TransactionStatus.APPROVED_FROM_PENDING);
-            transactionRepository.save(transaction);
-        });
-        TransactionEvent transactionEvent = new TransactionEvent(transactionId);
-        transactionKafkaService.publishTransactionEvent(walletId, transactionEvent);
-        return true;
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                Optional<Transaction> inDB = transactionRepository.findByPessimisticLockForApprove(walletId, transactionId, TransactionStatus.PENDING, DateOperation.getOffsetNowAsUTC());
+                Transaction transaction = inDB.orElseThrow();
+                transaction.setTransactionStatus(TransactionStatus.APPROVED_FROM_PENDING);
+                transactionRepository.save(transaction);
+            });
+            TransactionEvent transactionEvent = new TransactionEvent(transactionId);
+            transactionKafkaService.publishTransactionEvent(walletId, transactionEvent);
+            return true;
+        } catch (Exception ex) {
+            log.error("approveTransaction", ex);
+            return false;
+        }
+
     }
 
     public EmployeeTransactionsResponse getListOfTransactions(Integer page, Integer size, ApiTransactionStatus apiTransactionStatus) {
