@@ -102,4 +102,4 @@ This Digital Wallet Service is designed to demonstrate comprehensive understandi
 
 - Depends on the usage, we may partition the transaction table per TransactionStatus.
   - With that partition, we may speed up to process transactions (i am assuming that count of processing transaction should always be zero or close to zero)
-- This example project has no any business logic about rollback of the given transactions. For instance, if transaction is not processed in the given expiration time frame. Transaction status should be rollback and rollback status must be run
+- This example project has no any business logic about rollback of the given transactions. For instance, if transaction is not processed in the given expiration time frame, transaction status should be rollback and rollback status must be run
