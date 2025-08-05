@@ -1,11 +1,16 @@
 package com.mehmetozanguven.inghubs_digital_wallet.wallet;
 
 import com.mehmetozanguven.inghubs_digital_wallet.core.DateOperation;
+import com.mehmetozanguven.inghubs_digital_wallet.core.OperationResult;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.transaction.TransactionEvent;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.transaction.TransactionStatus;
+import com.mehmetozanguven.inghubs_digital_wallet.core.exception.ApiErrorInfo;
+import com.mehmetozanguven.inghubs_digital_wallet.core.exception.ApiException;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.TransactionKafkaService;
+import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.business.CreateNewTransactionUseCase;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.mapper.WalletMapper;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.persistence.Transaction;
+import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.persistence.TransactionInfo;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.persistence.TransactionRepository;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.persistence.Transaction_;
 import com.mehmetozanguven.inghubs_digital_wallet_api.contract.openapi.model.ApiTransactionStatus;
@@ -45,18 +50,45 @@ public class WalletExternalEmployeeService {
 
     public boolean approveTransaction(String walletId, String transactionId) {
         try {
-            transactionTemplate.executeWithoutResult(status -> {
-                Optional<Transaction> inDB = transactionRepository.findByPessimisticLockForApprove(walletId, transactionId, TransactionStatus.PENDING, DateOperation.getOffsetNowAsUTC());
-                Transaction transaction = inDB.orElseThrow();
-                transaction.setTransactionStatus(TransactionStatus.APPROVED_FROM_PENDING);
-                transactionRepository.save(transaction);
+            OperationResult<Boolean> result = transactionTemplate.execute(status -> {
+                Optional<Transaction> inDB = transactionRepository.findByPessimisticLockForApprove(walletId, transactionId, TransactionStatus.PENDING);
+                if (inDB.isEmpty()) {
+                    return OperationResult.<Boolean>builder()
+                            .addException(ApiErrorInfo.TRANSACTION_NOT_FOUND)
+                            .build();
+                }
+                Transaction transaction = inDB.get();
+                if (transaction.getIsTransactionExpired()) {
+                    transaction.setProcessedAt(DateOperation.getOffsetNowAsUTC());
+                    transaction.setTransactionStatus(TransactionStatus.FAIL);
+                    transaction.setTransactionInfo(TransactionInfo.builder()
+                                    .code("-1")
+                                    .message("Failed because it is expired")
+                            .build());
+                    transactionRepository.save(transaction);
+
+                    return OperationResult.<Boolean>builder()
+                            .addException(ApiErrorInfo.TRANSACTION_EXPIRED)
+                            .build();
+                } else {
+                    transaction.setTransactionStatus(TransactionStatus.APPROVED_FROM_PENDING);
+                    transaction.setProcessedAt(null);
+                    transactionRepository.save(transaction);
+                    return OperationResult.<Boolean>builder()
+                            .addReturnedValue(true)
+                            .build();
+                }
             });
+            result.validateResult();
             TransactionEvent transactionEvent = new TransactionEvent(transactionId);
             transactionKafkaService.publishTransactionEvent(walletId, transactionEvent);
             return true;
+        } catch (ApiException ex) {
+            log.error("approveTransaction apiException", ex);
+            throw ex;
         } catch (Exception ex) {
             log.error("approveTransaction", ex);
-            return false;
+            throw new ApiException(ApiErrorInfo.TRANSACTION_OPERATION_FAILED);
         }
 
     }

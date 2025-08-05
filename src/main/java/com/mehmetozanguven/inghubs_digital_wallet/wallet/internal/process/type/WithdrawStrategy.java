@@ -35,21 +35,13 @@ public class WithdrawStrategy implements TransactionTypeStrategy {
             FinancialMoney transactionAmount = transaction.getTransactionAmount();
 
             boolean hasEnoughUsableMoneyToWithdraw = FinancialMoney.isMoreThanGivenAmount(wallet.getUsableBalance(), transactionAmount);
-            if (!hasEnoughUsableMoneyToWithdraw) {
-                log.error("Has not enough usable money to withdraw");
-                throw new ApiException(ApiErrorInfo.TRANSACTION_OPERATION_FAILED);
-            }
-
             boolean hasEnoughMoneyToWithdraw = FinancialMoney.isMoreThanGivenAmount(wallet.getBalance(), transactionAmount);
-            if (!hasEnoughMoneyToWithdraw) {
-                log.error("Has not enough money to withdraw");
-                throw new ApiException(ApiErrorInfo.TRANSACTION_OPERATION_FAILED);
-            }
 
             FinancialMoney usableBalanceAfterDeposit = FinancialMoney.subtractMoney(wallet.getUsableBalance(), transactionAmount);
             FinancialMoney balanceAfterDeposit = FinancialMoney.subtractMoney(wallet.getBalance(), transactionAmount);
 
-            if (transactionContext.isApprovedTransaction()) {
+            if (transactionContext.isApprovedTransaction() &&
+                    hasEnoughMoneyToWithdraw && hasEnoughUsableMoneyToWithdraw) {
                 wallet.setUsableBalance(usableBalanceAfterDeposit);
                 wallet.setBalance(balanceAfterDeposit);
 
@@ -58,11 +50,12 @@ public class WithdrawStrategy implements TransactionTypeStrategy {
                 transaction.setProcessedAt(DateOperation.getOffsetNowAsUTC());
             }
 
-            if (transactionContext.isTransactionPending()) {
+            if (transactionContext.isTransactionPending() && hasEnoughMoneyToWithdraw) {
                 wallet.setBalance(balanceAfterDeposit);
+                transaction.setProcessedAt(DateOperation.getOffsetNowAsUTC());
             }
 
-            if (transactionContext.isTransactionFromPendingToApproved()) {
+            if (transactionContext.isTransactionFromPendingToApproved() && hasEnoughUsableMoneyToWithdraw) {
                 wallet.setUsableBalance(usableBalanceAfterDeposit);
 
                 transactionInfo.setCode("");

@@ -1,5 +1,6 @@
 package com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.mapper;
 
+import com.mehmetozanguven.inghubs_digital_wallet.core.DateOperation;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.FinancialMoney;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.transaction.TransactionType;
 import com.mehmetozanguven.inghubs_digital_wallet.core.mapper.*;
@@ -18,6 +19,7 @@ import org.mapstruct.Mappings;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Mapper(componentModel = "spring", uses = SwaggerValueMapper.class, injectionStrategy = InjectionStrategy.CONSTRUCTOR)
 public interface WalletMapper {
@@ -83,6 +85,7 @@ public interface WalletMapper {
             @Mapping(target = "transactionAmount", expression = "java(savedTransaction.getTransactionAmount())"),
             @Mapping(target = "transactionType", source = "transactionType"),
             @Mapping(target = "transactionInfoModel", source = "transactionInfo"),
+            @Mapping(target = "transactionExpired", expression = "java(savedTransaction.getIsTransactionExpired())"),
     })
     TransactionModel createTransactionModelFromTransactionEntity(Transaction savedTransaction);
 
@@ -94,6 +97,10 @@ public interface WalletMapper {
             @Mapping(target = "transactionType", source = "transactionModel.transactionType.value"),
             @Mapping(target = "code", source = "transactionModel.transactionInfoModel.code"),
             @Mapping(target = "message", source = "transactionModel.transactionInfoModel.message"),
+            @Mapping(target = "expirationTime", source = "transactionModel.expirationTime", qualifiedBy = OffsetDateTimeToEpochMillis.class),
+            @Mapping(target = "isExpired", source = "transactionModel.transactionExpired")
     })
     TransactionResponse createTransactionResponseFromTransactionModel(TransactionModel transactionModel);
+
+
 }

@@ -10,6 +10,8 @@ import com.mehmetozanguven.inghubs_digital_wallet_api.contract.openapi.model.Api
 import com.mehmetozanguven.inghubs_digital_wallet_api.contract.openapi.model.ApiTransactionStatus;
 import org.mapstruct.Mapper;
 
+import java.time.OffsetDateTime;
+
 @Mapper(componentModel = "spring")
 public class SwaggerValueMapper {
 
@@ -35,6 +37,11 @@ public class SwaggerValueMapper {
     @ApiTransactionStatusFromTransactionStatus
     public static ApiTransactionStatus fromTransactionStatus(TransactionStatus transactionStatus) {
         return ApiTransactionStatus.fromValue(transactionStatus.getValue());
+    }
+
+    @OffsetDateTimeToEpochMillis
+    public static Long offsetDateTimeToMs(OffsetDateTime givenTime) {
+        return givenTime.toInstant().toEpochMilli();
     }
 
     public static CurrencyType currencyTypeFromApiCurrencyType(ApiCurrencyCode apiCurrencyCode) {

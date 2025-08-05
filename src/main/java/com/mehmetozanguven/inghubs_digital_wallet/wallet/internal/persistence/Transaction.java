@@ -20,7 +20,6 @@ import org.springframework.data.annotation.CreatedDate;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
 @With
 @Builder
@@ -88,7 +87,7 @@ public class Transaction extends ApiBaseEntity {
         return new FinancialMoney(amount, currencyType);
     }
 
-    public boolean isTransactionExpired() {
+    public boolean getIsTransactionExpired() {
         return DateOperation.getOffsetNowAsUTC().isAfter(expirationTime);
     }
 

@@ -80,7 +80,7 @@ public class CreateNewTransactionUseCase implements ApiApplyOperationResultLogic
                 .wallet(foundWallet)
                 .currencyType(foundWallet.getCurrencyType())
                 .amount(request.financialMoney().amount())
-                .expirationTime(DateOperation.addDurationToUTCNow(Duration.ofMinutes(2)))
+                .expirationTime(DateOperation.addDurationToUTCNow(Duration.ofMinutes(5)))
                 .transactionInfo(request.transactionInfo())
                 .oppositePartyType(request.oppositePartyType())
                 .oppositeParty(request.oppositeParty())

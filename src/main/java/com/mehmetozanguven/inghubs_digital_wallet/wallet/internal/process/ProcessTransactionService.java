@@ -4,15 +4,19 @@ package com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.process;
 import com.mehmetozanguven.inghubs_digital_wallet.core.OperationResult;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.transaction.TransactionEvent;
 import com.mehmetozanguven.inghubs_digital_wallet.core.exception.ApiErrorInfo;
+import com.mehmetozanguven.inghubs_digital_wallet.core.exception.ApiException;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.TransactionModel;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.mapper.WalletMapper;
 import com.mehmetozanguven.inghubs_digital_wallet.wallet.internal.persistence.Transaction;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -29,9 +33,16 @@ public class ProcessTransactionService {
             return OperationResult.<TransactionModel>builder()
                     .addReturnedValue(transactionMapper.createTransactionModelFromTransactionEntity(result.getReturnedValue()))
                     .build();
+        } catch (ApiException ex) {
+            log.error("processTransaction ApiException", ex);
+            if (!StringUtils.equals(ex.getCode(), ApiErrorInfo.TRANSACTION_NOT_FOUND.getCode())) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            }
+            return OperationResult.<TransactionModel>builder()
+                    .addException(ex)
+                    .build();
         } catch (Exception ex) {
             log.error("processTransaction exception. Rollback", ex);
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return OperationResult.<TransactionModel>builder()
                     .addException(ApiErrorInfo.TRANSACTION_OPERATION_FAILED)
                     .build();

@@ -57,8 +57,8 @@ public enum ApiErrorInfo implements ApiExceptionInfo {
             "W-2",
             "Wallet not open for withdraw",
             HttpStatus.OK
-    )
-    ;
+    ),
+    TRANSACTION_EXPIRED("T-3", "Transaction expired", HttpStatus.BAD_REQUEST);
 
     public final String code;
     public final String message;

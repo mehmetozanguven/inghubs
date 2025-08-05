@@ -1,5 +1,6 @@
 package com.mehmetozanguven.inghubs_digital_wallet.wallet;
 
+import com.mehmetozanguven.inghubs_digital_wallet.core.DateOperation;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.ApiBaseModel;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.FinancialMoney;
 import com.mehmetozanguven.inghubs_digital_wallet.core.commonModel.opposite_party_type.OppositePartyType;
@@ -10,6 +11,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.time.OffsetDateTime;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -27,4 +29,6 @@ public class TransactionModel extends ApiBaseModel {
     private OffsetDateTime processedAt;
     private OffsetDateTime expirationTime;
     private TransactionInfoModel transactionInfoModel;
+    private boolean transactionExpired;
+
 }

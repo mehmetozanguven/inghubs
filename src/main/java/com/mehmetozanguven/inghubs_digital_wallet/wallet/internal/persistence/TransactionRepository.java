@@ -15,11 +15,11 @@ import java.util.Optional;
 public interface TransactionRepository extends JpaRepository<Transaction, String>, JpaSpecificationExecutor<Transaction> {
 
     @Lock(value = LockModeType.PESSIMISTIC_WRITE)
-    @Query("FROM Transaction ts JOIN FETCH ts.wallet tw WHERE ts.id = :transactionId AND ts.expirationTime >= :now ")
-    Optional<Transaction> findByPessimisticLockBeforeExpiration(String transactionId, OffsetDateTime now);
+    @Query("FROM Transaction ts JOIN FETCH ts.wallet tw WHERE ts.id = :transactionId AND ts.expirationTime >= :now AND ts.processedAt IS NULL ")
+    Optional<Transaction> findTransactionToProcess(String transactionId, OffsetDateTime now);
 
     @Lock(value = LockModeType.PESSIMISTIC_WRITE)
-    @Query("FROM Transaction ts JOIN FETCH ts.wallet tw WHERE tw.id = :walletId AND ts.id = :transactionId AND ts.transactionStatus = :transactionStatus AND ts.expirationTime >= :now")
-    Optional<Transaction> findByPessimisticLockForApprove(String walletId, String transactionId, TransactionStatus transactionStatus, OffsetDateTime now);
+    @Query("FROM Transaction ts JOIN FETCH ts.wallet tw WHERE tw.id = :walletId AND ts.id = :transactionId AND ts.transactionStatus = :transactionStatus")
+    Optional<Transaction> findByPessimisticLockForApprove(String walletId, String transactionId, TransactionStatus transactionStatus);
 
 }

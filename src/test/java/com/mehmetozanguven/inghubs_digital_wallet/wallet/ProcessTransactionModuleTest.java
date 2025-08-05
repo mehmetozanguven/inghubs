@@ -71,9 +71,12 @@ public class ProcessTransactionModuleTest extends BaseApplicationModuleTest {
 
         // process transaction
         transactionPublisher.pushProcessingTransactions();
-        waitNMillis(2500);
+        waitNMillis(1500);
+        // two or more consecutive tries should not affect the result
         transactionPublisher.pushPendingTransactions();
-        waitNMillis(2500);
+        waitNMillis(1500);
+        transactionPublisher.pushPendingTransactions();
+        waitNMillis(1500);
 
         Awaitility.await()
                 .pollInterval(Duration.ofSeconds(3))
@@ -94,6 +97,10 @@ public class ProcessTransactionModuleTest extends BaseApplicationModuleTest {
         boolean approvalResult = walletExternalEmployeeService.approveTransaction(transactionResponse.getWalletId(), transactionResponse.getTransactionId());
         Assertions.assertTrue(approvalResult);
 
+
+        transactionPublisher.pushApprovedFromPendingTransactions();
+        waitNMillis(1500);
+
         // wait to process transaction through kafka
         Awaitility.await()
                 .pollInterval(Duration.ofSeconds(3))
@@ -109,7 +116,22 @@ public class ProcessTransactionModuleTest extends BaseApplicationModuleTest {
                             () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getUsableBalance()))
                     );
                 });
+
+        // another schedulerJob should not affect the result
+        transactionPublisher.pushApprovedTransactions();
+        waitNMillis(1500);
+
+        WalletTransactionsResponse updatedTransactions = walletInternalService.getListOfTransactionsInWallet(customerId, transactionResponse.getWalletId(), PageRequest.of(0, 10), ApiTransactionStatus.APPROVED);
+        WalletModel walletModel = walletInternalService.getCustomerWallet(customerId, transactionResponse.getWalletId());
+
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(1, updatedTransactions.getTotalElements()),
+                () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getBalance())),
+                () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getUsableBalance()))
+        );
     }
+
+
 
     @Test
     void test_WalletDepositFlow() {
@@ -221,6 +243,116 @@ public class ProcessTransactionModuleTest extends BaseApplicationModuleTest {
     }
 
     @Test
+    void test_WalletWithdrawWithBiggerAmount() {
+        String customerId = "test";
+        // Create a wallet
+        FinancialMoney initialBalanceRequest = FinancialMoney.builder().amount(BigDecimal.ZERO).currency(CurrencyType.TRY).build();
+        WalletResponse createdWallet = createWalletForCustomer(customerId, initialBalanceRequest);
+
+        // Make deposit with amount higher than 1000
+        TransactionResponse depositTransaction = walletInternalService.createDepositTransaction(
+                new DepositApiRequest()
+                        .walletId(createdWallet.getId())
+                        .sourceOfDeposit(ApiPartyType.IBAN)
+                        .oppositeParty("IBAN")
+                        .money(new ApiMoney(BigDecimal.valueOf(10000L), ApiCurrencyCode.TRY)),
+                customerId
+        );
+
+        // process tx.PROCESSING -> tx.PENDING
+        transactionPublisher.pushProcessingTransactions();
+        waitNMillis(1500);
+        // process tx.PENDING
+        transactionPublisher.pushPendingTransactions();
+        waitNMillis(1500);
+
+        // update tx to tx.APPROVED_FROM_PENDING
+        walletExternalEmployeeService.approveTransaction(depositTransaction.getWalletId(), depositTransaction.getTransactionId());
+        // process tx.APPROVED_FROM_PENDING -> tx.APPROVE
+        transactionPublisher.pushApprovedFromPendingTransactions();
+        waitNMillis(1500);
+        transactionPublisher.pushApprovedTransactions();
+        waitNMillis(1500);
+
+        FinancialMoney nextBalanceRequestAfterDeposit = initialBalanceRequest.withAmount(BigDecimal.valueOf(10000L));
+
+        // Make withdraw with given amount higher than 1000
+        TransactionResponse transactionResponse = walletInternalService.createWithdrawTransaction(
+                new WithdrawApiRequest()
+                        .walletId(createdWallet.getId())
+                        .sourceOfDeposit(ApiPartyType.IBAN)
+                        .oppositeParty("IBAN")
+                        .money(new ApiMoney(BigDecimal.valueOf(2000L), ApiCurrencyCode.TRY)),
+                customerId
+        );
+
+        FinancialMoney expectedWalletAmount = new FinancialMoney(BigDecimal.valueOf(8000L), CurrencyType.TRY);
+
+        // process tx.PROCESSING -> tx.PENDING
+        transactionPublisher.pushProcessingTransactions();
+        waitNMillis(1500);
+        // process tx.PENDING
+        // two or more consecutive tries should not affect the result
+        transactionPublisher.pushPendingTransactions();
+        waitNMillis(1500);
+        transactionPublisher.pushPendingTransactions();
+        waitNMillis(1500);
+
+        Awaitility.await()
+                .pollInterval(Duration.ofSeconds(3))
+                .atMost(Duration.ofSeconds(20))
+                .untilAsserted(() -> {
+                    // transaction should be pending and only wallet.balance must be updated
+                    WalletTransactionsResponse updatedTransactions = walletInternalService.getListOfTransactionsInWallet(customerId, transactionResponse.getWalletId(), PageRequest.of(0, 10), ApiTransactionStatus.PENDING);
+                    WalletModel walletModel = walletInternalService.getCustomerWallet(customerId, transactionResponse.getWalletId());
+
+                    Assertions.assertAll(
+                            () -> Assertions.assertEquals(1, updatedTransactions.getTotalElements()),
+                            () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getBalance())),
+                            () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(nextBalanceRequestAfterDeposit, walletModel.getUsableBalance()))
+                    );
+                });
+
+        // update tx to tx.APPROVED_FROM_PENDING
+        boolean approvalResult = walletExternalEmployeeService.approveTransaction(transactionResponse.getWalletId(), transactionResponse.getTransactionId());
+        Assertions.assertTrue(approvalResult);
+
+        // process tx.APPROVED_FROM_PENDING -> tx.APPROVE
+        transactionPublisher.pushApprovedFromPendingTransactions();
+        waitNMillis(1500);
+
+        // wait to process transaction through kafka
+        Awaitility.await()
+                .pollInterval(Duration.ofSeconds(3))
+                .atMost(Duration.ofSeconds(20))
+                .untilAsserted(() -> {
+                    // transaction should be approved and wallet.balance & wallet.usableBalance must be updated
+                    WalletTransactionsResponse updatedTransactions = walletInternalService.getListOfTransactionsInWallet(customerId, transactionResponse.getWalletId(), PageRequest.of(0, 10), ApiTransactionStatus.APPROVED);
+                    WalletModel walletModel = walletInternalService.getCustomerWallet(customerId, transactionResponse.getWalletId());
+
+                    Assertions.assertAll(
+                            () -> Assertions.assertEquals(2, updatedTransactions.getTotalElements()),
+                            () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getBalance())),
+                            () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getUsableBalance()))
+                    );
+                });
+
+        // another schedulerJob should not affect the result
+        transactionPublisher.pushApprovedTransactions();
+        waitNMillis(1500);
+
+        WalletTransactionsResponse updatedTransactions = walletInternalService.getListOfTransactionsInWallet(customerId, transactionResponse.getWalletId(), PageRequest.of(0, 10), ApiTransactionStatus.APPROVED);
+        WalletModel walletModel = walletInternalService.getCustomerWallet(customerId, transactionResponse.getWalletId());
+
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(2, updatedTransactions.getTotalElements()),
+                () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getBalance())),
+                () -> Assertions.assertTrue(FinancialMoney.isEqualAmount(expectedWalletAmount, walletModel.getUsableBalance()))
+        );
+    }
+
+
+    @Test
     void test_WalletWithdrawFlow() {
         String customerId = "test";
         // Create a wallet
@@ -238,9 +370,9 @@ public class ProcessTransactionModuleTest extends BaseApplicationModuleTest {
         );
 
         transactionPublisher.pushProcessingTransactions();
-        waitNMillis(2500);
+        waitNMillis(1500);
         transactionPublisher.pushPendingTransactions();
-        waitNMillis(2500);
+        waitNMillis(1500);
 
         // Make withdraw
         TransactionResponse transactionResponse = walletInternalService.createWithdrawTransaction(
@@ -255,9 +387,9 @@ public class ProcessTransactionModuleTest extends BaseApplicationModuleTest {
         FinancialMoney expectedWalletAmount = new FinancialMoney(BigDecimal.valueOf(200L), CurrencyType.TRY);
 
         transactionPublisher.pushProcessingTransactions();
-        waitNMillis(2500);
+        waitNMillis(1500);
         transactionPublisher.pushApprovedTransactions();
-        waitNMillis(2500);
+        waitNMillis(1500);
 
         Awaitility.await()
                 .pollInterval(Duration.ofSeconds(3))

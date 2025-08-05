@@ -30,7 +30,7 @@ public class ProcessTransactionUseCase implements ApiApplyOperationResultLogic<T
 
     @Override
     public OperationResult<ProcessTransactionInternalRequest> logicBefore(TransactionEvent transactionEvent) {
-        Optional<Transaction> inDB = transactionRepository.findByPessimisticLockBeforeExpiration(transactionEvent.transactionId(), DateOperation.getOffsetNowAsUTC());
+        Optional<Transaction> inDB = transactionRepository.findTransactionToProcess(transactionEvent.transactionId(), DateOperation.getOffsetNowAsUTC());
         if (inDB.isEmpty()) {
             log.error("There is no transaction for the given ID: {}", transactionEvent.transactionId());
             return OperationResult.<ProcessTransactionInternalRequest>builder()
@@ -38,7 +38,7 @@ public class ProcessTransactionUseCase implements ApiApplyOperationResultLogic<T
                     .build();
         }
         Transaction transaction = inDB.get();
-        if (transaction.isTransactionExpired()) {
+        if (transaction.getIsTransactionExpired()) {
             return OperationResult.<ProcessTransactionInternalRequest>builder()
                     .addException(ApiErrorInfo.TRANSACTION_OPERATION_FAILED)
                     .build();

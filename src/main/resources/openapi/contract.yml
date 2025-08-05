@@ -629,6 +629,8 @@ components:
         - transactionType
         - code
         - message
+        - expirationTime
+        - isExpired
       properties:
         walletId:
           type: string
@@ -644,6 +646,11 @@ components:
           type: string
         message:
           type: string
+        expirationTime:
+          type: integer
+          format: int64
+        isExpired:
+          type: boolean
     TransactionApiResponse:
       allOf:
         - $ref: '#/components/schemas/BaseApiResponse'

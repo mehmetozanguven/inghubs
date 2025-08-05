@@ -39,6 +39,7 @@ public class DepositStrategy implements TransactionTypeStrategy {
 
             if (transactionContext.isTransactionPending()) {
                 wallet.setBalance(balanceAfterDeposit);
+                transaction.setProcessedAt(DateOperation.getOffsetNowAsUTC());
             }
 
             if (transactionContext.isTransactionFromPendingToApproved()) {
