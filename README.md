@@ -23,11 +23,11 @@
 - Run the following command:
   - `./mvnw clean package -DskipTests && docker build -t my-springboot-app . && docker compose up`
   - For the first run it will create a folder called **postgres_data** in the project folder and run the **init-db.sh** script. 
-    - Therefore, for the first run spring boot project may fail. Please run the command again
+    - **Therefore, for the first run spring boot project may fail. `docker compose down` and then please run the command again**
 - Then open the swagger documentation: 
   - [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
-### Manually
+### Manually run
 
 - Run postgres docker image and create database called **example_ing_test_db**:
   - `CREATE DATABASE example_ing_test_db;`
@@ -72,6 +72,7 @@ app:
   - POST `/api/customer/wallets`
 - Then create a transaction (either deposit or withdraw)
   - POST `/api/customer/wallet/deposit` || `/api/customer/wallet/withdraw`
+    - Wait for transaction to process
 - Check customer transactions
   - GET `/api/customer/wallet/{walletid}/transactions`
 - If any transactions require approve, login with employee email & password:
@@ -79,11 +80,12 @@ app:
   - GET `/api/employee/transactions`
 - Approve transaction
   - POST `/api/employee/transaction/post`
+    - Wait for transaction to process
 
 ## Project Overview
 
 This Digital Wallet Service is designed to demonstrate comprehensive understanding of:
-- **Enterprise Java Development** with Spring Boot ecosystem
+- **Java Development** with Spring Boot ecosystem
 - **Financial Services Architecture** with proper transaction handling
 - **Security-First Design** with JWT authentication and role-based access
 - **API Documentation**: OpenAPI 3.0 with Swagger UI. Look at the file **resources/openapi/contact.yml** for details

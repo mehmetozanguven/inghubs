@@ -56,25 +56,25 @@ public class TransactionPublisher {
     }
 
     @Scheduled(cron = "${app.scheduler.process-transactions}")
-    @SchedulerLock(name = "processingTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "5s")
+    @SchedulerLock(name = "processingTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "3s")
     public void pushProcessingTransactions() {
         processTransaction(TransactionStatus.PROCESSING);
     }
 
     @Scheduled(cron = "${app.scheduler.process-transactions}")
-    @SchedulerLock(name = "pendingTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "5s")
+    @SchedulerLock(name = "pendingTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "3s")
     public void pushPendingTransactions() {
         processTransaction(TransactionStatus.PENDING);
     }
 
     @Scheduled(cron = "${app.scheduler.process-transactions}")
-    @SchedulerLock(name = "approvedTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "5s")
+    @SchedulerLock(name = "approvedTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "3s")
     public void pushApprovedFromPendingTransactions() {
         processTransaction(TransactionStatus.APPROVED_FROM_PENDING);
     }
 
     @Scheduled(cron = "${app.scheduler.process-transactions}")
-    @SchedulerLock(name = "approvedTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "5s")
+    @SchedulerLock(name = "approvedTransactionSchedulerLock", lockAtMostFor = "3m", lockAtLeastFor = "3s")
     public void pushApprovedTransactions() {
         processTransaction(TransactionStatus.APPROVED);
     }

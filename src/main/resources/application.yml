@@ -36,7 +36,7 @@ spring:
 
 app:
   scheduler:
-    process-transactions: '*/5 * * * * *'
+    process-transactions: '*/3 * * * * *'
   wallet:
     transaction:
       max-allowed-amount: 1000
